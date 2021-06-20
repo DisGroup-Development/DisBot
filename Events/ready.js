@@ -14,6 +14,11 @@ class Ready extends BaseEvent {
 
     async execute(DisBot = require('../DisBot')) {
 
+        //DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.set([ ]);
+        DisBot.interactions.forEach(Interaction => {
+            ( Interaction.Config.enabledOptions ? DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.create({ name: Interaction.Help.Name, description: Interaction.Help.Description, options: Interaction.Config.Options }) : DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.create({ name: Interaction.Help.Name, description: Interaction.Help.Description }) )
+        })
+
         var DisBotGuildSizeCount;
 
         DisBot.user.setStatus(DisBot.config.User.Status);

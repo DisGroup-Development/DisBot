@@ -13,7 +13,7 @@ class BaseInteraction {
         enabledOptions = false,
         Options = null,
         Cooldown = 2000,
-        Dirname = false,
+        Dirname = null,
         adminGuildOnly = false,
         guildOnly = false,
         sysadminOnly = true,

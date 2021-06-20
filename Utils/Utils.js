@@ -1,3 +1,5 @@
+const Path = require('path');
+
 class Utils {
 
     constructor(DisBot) {
@@ -16,7 +18,7 @@ class Utils {
 
         try {
 
-            const CommandData = new (require(`../.${CommandPath}${Path.sep}${CommandName}`))(DisBot);
+            const CommandData = new (require(`../${CommandPath}${Path.sep}${CommandName}`))(DisBot);
 
             CommandData.Config.Location = CommandPath;
 
@@ -36,7 +38,7 @@ class Utils {
 
         try {
 
-            const InteractionData = new (require(`../.${InteractionPath}${Path.sep}${InteractionName}`))(DisBot);
+            const InteractionData = new (require(`../${InteractionPath}${Path.sep}${InteractionName}`))(DisBot);
 
             InteractionData.Config.Location = InteractionPath;
 

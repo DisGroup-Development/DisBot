@@ -35,6 +35,7 @@ class BaseDisBot extends Discord.Client {
         this.utils = new Util(this);
 
         this.readDirectory = require('util').promisify(require('fs').readdir);
+        
 
     }
 

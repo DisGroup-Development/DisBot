@@ -14,7 +14,7 @@ const DisBotInit = async () => {
 
         Commands.forEach(Command => {
 
-            DisBot.functions.loadCommand(Command, `./Commands/${CommandCategoryDirectory}`, DisBot);
+            DisBot.utils.loadCommand(Command, `./Commands/${CommandCategoryDirectory}`, DisBot);
 
         });
 
@@ -30,7 +30,7 @@ const DisBotInit = async () => {
 
         Interactions.forEach(Interaction => {
 
-            DisBot.functions.loadInteraction(Interaction, `./Interactions/${InteractionCategoryDirectory}`, DisBot);
+            DisBot.utils.loadInteraction(Interaction, `./Interactions/${InteractionCategoryDirectory}`, DisBot);
 
         });
 
