@@ -31,8 +31,10 @@ class BaseDisBot extends Discord.Client {
 
         this.config = require('../config.json');
 
-        this.logger = new Logger();
-        this.utils = new Util();
+        this.logger = new Logger(this);
+        this.utils = new Util(this);
+
+        this.readDirectory = require('util').promisify(require('fs').readdir);
 
     }
 
