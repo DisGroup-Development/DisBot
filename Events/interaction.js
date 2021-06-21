@@ -8,7 +8,7 @@ class Interaction extends BaseEvent {
         super(DisBot, {
             Name: 'interaction',
             Enabled: true,
-            Type: 'on'
+            Once: false
         });
         
     }
@@ -16,6 +16,8 @@ class Interaction extends BaseEvent {
     async execute(DisBot = require('../DisBot'), Interaction = new Discord.CommandInteraction()) {
 
         if(!Interaction.isCommand()) return;
+
+        DisBot.logger.log(`${Interaction.user.username} (${Interaction.user.id}) used interaction ${Interaction.commandName} (${Interaction.commandID}) in ${Interaction.guild.name} (${Interaction.guildID})`);
 
         Interaction.defer();
 
@@ -27,7 +29,6 @@ class Interaction extends BaseEvent {
         if(InteractionCommand.Config.Enabled === false) return Interaction.editReply('Not enabled');
 
         if(InteractionCommand) return InteractionCommand.execute(Interaction, Interaction.options, DisBot);
-
 
     }
 

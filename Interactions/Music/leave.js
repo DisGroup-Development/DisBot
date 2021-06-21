@@ -31,6 +31,7 @@ class Leave extends BaseInteraction {
     async execute(Interaction = new Discord.CommandInteraction(), InteractionOptions = new Discord.CommandInteraction().options, DisBot = require('../../DisBot')) {
 
         const MemberVoiceChannel = Interaction.member.voice.channel;
+        const ServerQueue = await DisBot.serverQueues.get(Interaction.guildID);
 
         var NoMemberVoiceChannelEmbed = new Discord.MessageEmbed()
             .setColor(DisBot.config.Colors.Red)
@@ -46,13 +47,15 @@ class Leave extends BaseInteraction {
 
         var AlreadyInVoiceChannelEmbed = new Discord.MessageEmbed()
             .setColor(DisBot.config.Colors.Red)
-            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} I'm already in another voice channel. Join me to use other music commands.`)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} I'm already in another voice channel. Join me to use this music commands.`)
 
         if(Interaction.guild.me.voice.channelID !== MemberVoiceChannel.id) return Interaction.editReply({ embeds: [ AlreadyInVoiceChannelEmbed ], ephemeral: true });
 
         const VoiceConnection = DiscordVoice.getVoiceConnection(Interaction.guildID);
 
         VoiceConnection.destroy();
+
+        if(ServerQueue) DisBot.serverQueues.delete(Interaction.guildID);
 
         var LeftVoiceChannelEmbed = new Discord.MessageEmbed()
             .setColor(DisBot.config.Colors.DisBot)

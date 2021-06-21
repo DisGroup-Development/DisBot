@@ -26,9 +26,11 @@ class Utils {
 
             DisBot.commands.set(CommandData.Help.Name, CommandData);
 
+            DisBot.logger.debug(`Loaded command ${CommandData.Help.Name}`);
+
         } catch (Error) {
 
-            return DisBot.logger.error(`There was an error while loading command ${CommandName} : ${Error}`)
+            return DisBot.logger.error(`There was an error while loading command ${CommandName} : ${Error}`);
 
         }
 
@@ -46,9 +48,11 @@ class Utils {
 
             DisBot.interactions.set(InteractionData.Help.Name, InteractionData);
 
+            DisBot.logger.debug(`Loaded interaction ${InteractionData.Help.Name}`);
+
         } catch (Error) {
 
-            return DisBot.logger.error(`There was an error while loading interaction ${InteractionName} : ${Error}`)
+            return DisBot.logger.error(`There was an error while loading interaction ${InteractionName} : ${Error}`);
 
         }
 

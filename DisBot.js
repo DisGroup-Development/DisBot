@@ -6,7 +6,7 @@ const DisBotInit = async () => {
 
     const CommandDirectory = await DisBot.readDirectory('./Commands/');
 
-    DisBot.logger.log(`Loading ${CommandDirectory.length} command categorys...`);
+    DisBot.logger.debug(`Loading ${CommandDirectory.length} command categorys...`);
 
     CommandDirectory.forEach(async CommandCategoryDirectory => {
         
@@ -22,7 +22,7 @@ const DisBotInit = async () => {
 
     const InteractionDirectory = await DisBot.readDirectory('./Interactions/');
 
-    DisBot.logger.log(`Loading ${InteractionDirectory.length} interaction categorys...`);
+    DisBot.logger.debug(`Loading ${InteractionDirectory.length} interaction categorys...`);
 
     InteractionDirectory.forEach(async InteractionCategoryDirectory => {
         
@@ -38,7 +38,7 @@ const DisBotInit = async () => {
 
     const EventDirectory = await DisBot.readDirectory('./Events/');
 
-    DisBot.logger.log(`Loading ${EventDirectory.length} events...`);
+    DisBot.logger.debug(`Loading ${EventDirectory.length} events...`);
 
     EventDirectory.forEach(EventFile => {
 
@@ -47,9 +47,9 @@ const DisBotInit = async () => {
 
         if(!EventData.Config.Enabled) return;
 
-        ( EventData.Config.Type === 'on' ? DisBot.on(EventName, (...args) => EventData.execute(DisBot, ...args)) : DisBot.once(EventName, (...args) => EventData.execute(DisBot, ...args)));
+        ( EventData.Config.Once ? DisBot.once(EventName, (...args) => EventData.execute(DisBot, ...args)) : DisBot.on(EventName, (...args) => EventData.execute(DisBot, ...args)));
 
-        DisBot.logger.log(`Loaded event ${EventName}`)
+        DisBot.logger.debug(`Loaded event ${EventName}`)
 
         delete require.cache[require.resolve(`./Events/${EventFile}`)];
 

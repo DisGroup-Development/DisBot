@@ -29,19 +29,19 @@ class Logger {
     }
 
     debug(Input) { 
-        return console.log(`${ConsolePrefix} ${Chalk.bgGreen(Chalk.black('DEBUG'))} | ${Input}`);
+        return console.debug(`${ConsolePrefix} ${Chalk.bgGreen(Chalk.black('DEBUG'))} | ${Input}`);
     }
 
     error(Input) {
-        return console.log(`${ConsolePrefix} ${Chalk.bgRed(Chalk.white('ERROR'))} | ${Input}`); 
+        return console.debug(`${ConsolePrefix} ${Chalk.bgRed(Chalk.white('ERROR'))} | ${Input}`); 
     }
 
     log(Input) {
-        return console.log(`${ConsolePrefix} ${Chalk.bgBlue(Chalk.black('LOG'))} | ${Input}`);
+        return console.debug(`${ConsolePrefix} ${Chalk.bgBlue(Chalk.black('LOG'))} | ${Input}`);
     }
 
     warn(Input) { 
-        return console.log(`${ConsolePrefix} ${Chalk.bgYellow(Chalk.black('WARN'))} | ${Input}`);
+        return console.debug(`${ConsolePrefix} ${Chalk.bgYellow(Chalk.black('WARN'))} | ${Input}`);
     }
 
 }

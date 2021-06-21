@@ -43,7 +43,7 @@ class Join extends BaseInteraction {
             .setColor(DisBot.config.Colors.Red)
             .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} I'm already in another voice channel. Join me to use other music commands.`)
 
-        if(ServerQueue) return Interaction.editReply({ embeds: [ AlreadyInVoiceChannelEmbed ], ephemeral: true });
+        if(ServerQueue || ( Interaction.guild.me.voice.channelID !== MemberVoiceChannel.id && Interaction.guild.me.voice.channelID === undefined )) return Interaction.editReply({ embeds: [ AlreadyInVoiceChannelEmbed ], ephemeral: true });
 
         var SameVoiceChannelEmbed = new Discord.MessageEmbed()
             .setColor(DisBot.config.Colors.Red)

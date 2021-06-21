@@ -7,17 +7,12 @@ class Ready extends BaseEvent {
         super(DisBot, {
             Name: 'ready',
             Enabled: true,
-            Type: 'on'
+            Once: true
         });
         
     }
 
     async execute(DisBot = require('../DisBot')) {
-
-        //DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.set([ ]);
-        DisBot.interactions.forEach(Interaction => {
-            ( Interaction.Config.enabledOptions ? DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.create({ name: Interaction.Help.Name, description: Interaction.Help.Description, options: Interaction.Config.Options }) : DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.create({ name: Interaction.Help.Name, description: Interaction.Help.Description }) )
-        })
 
         var DisBotGuildSizeCount;
 
@@ -54,6 +49,8 @@ class Ready extends BaseEvent {
             }, 15000);
 
         }, 20000);
+
+        DisBot.logger.debug(`Logged in as ${DisBot.user.username}`);
 
     }
 

@@ -3,13 +3,13 @@ class BaseEvent {
     constructor(DisBot, {
         Name = null,
         Enabled = true,
-        Type = 'on'
+        Once = false,
     })
 
     {
 
         this.DisBot = DisBot;
-        this.Config = { Enabled, Type };
+        this.Config = { Enabled, Once };
         this.Help = { Name };
 
     }

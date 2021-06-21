@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const InteractionPlayer = require('../Utils/interactionPlayer');
 const Logger = require('../Utils/Logger');
 const Util = require('../Utils/Utils');
 
@@ -31,6 +32,7 @@ class BaseDisBot extends Discord.Client {
 
         this.config = require('../config.json');
 
+        this.interactionPlayer = new InteractionPlayer(this);
         this.logger = new Logger(this);
         this.utils = new Util(this);
 
