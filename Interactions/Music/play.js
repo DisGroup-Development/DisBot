@@ -63,7 +63,13 @@ class Play extends BaseInteraction {
 
                 const SongData = await YouTubeDownloader.getInfo(URL);
 
-                SongInfo = { Author: SongData.videoDetails.author.name, Duration: SongData.videoDetails.lengthSeconds, Requester: DisBot.users.cache.get(Interaction.user.id), Title: SongData.videoDetails.title, Thumbnail: SongData.videoDetails.thumbnails[3].url, URL: SongData.videoDetails.video_url };
+                SongInfo = { Author: SongData.videoDetails.title, Duration: SongData.videoDetails.lengthSeconds, Requester: DisBot.users.cache.get(Interaction.user.id), Title: SongData.videoDetails.title, Thumbnail: SongData.videoDetails.thumbnails[3].url, URL: SongData.videoDetails.video_url };
+
+                var SearchForURLEmbed = new Discord.MessageEmbed()
+                    .setColor(DisBot.config.Colors.DisBot)
+                    .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.YouTube)} Searching for: \`\`${SongInfo.Title}\`\``)
+
+                Interaction.editReply({ embeds: [ SearchForURLEmbed ], ephemeral: false });
 
             } catch (Error) {
 
@@ -123,8 +129,8 @@ class Play extends BaseInteraction {
 
         } catch (Error) {
 
-            await BaseServerQueueData.Connection.destroy();
-            await DisBot.serverQueues.delete(Interaction.guildID);
+            if(BaseServerQueueData.Connection) await ServerQueue.Connection.destroy();
+            DisBot.serverQueues.delete(Interaction.guildID);
             return DisBot.utils.handleInteractionError(Interaction, InteractionOptions, DisBot, Error);
 
         }

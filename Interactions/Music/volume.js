@@ -1,6 +1,5 @@
 const BaseInteraction = require('../../Base/Interaction');
 const Discord = require('discord.js');
-const DiscordVoice = require('@discordjs/voice');
 
 class Volume extends BaseInteraction {
 

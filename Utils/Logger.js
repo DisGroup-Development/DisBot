@@ -1,6 +1,8 @@
 const Chalk = require('chalk');
+const Discord = require('discord.js');
 
-const ConsolePrefix = `[ DisBot | ${formatDate(new Date(Date.now()))} ] :`;
+const ConsolePrefix = `[ DisBot Alpha | ${formatDate(new Date(Date.now()))} ] :`;
+const Wait = require('util').promisify(setTimeout);
 
 function formatDate(CurrentDate) {
 
@@ -28,20 +30,48 @@ class Logger {
 
     }
 
-    debug(Input) { 
-        return console.debug(`${ConsolePrefix} ${Chalk.bgGreen(Chalk.black('DEBUG'))} | ${Input}`);
+    debug(Input) {
+
+        Wait(1000)
+
+        const WebhookChannel = new Discord.WebhookClient(this.DisBot.config.Guild.Log.ID, this.DisBot.config.Guild.Log.Token);
+
+        WebhookChannel.send(`\`\`\`JS\n${ConsolePrefix} DEBUG | ${Input}\`\`\``)
+        return console.log(`${ConsolePrefix} ${Chalk.bgGreen(Chalk.black('DEBUG'))} | ${Input}`);
+
     }
 
-    error(Input) {
-        return console.debug(`${ConsolePrefix} ${Chalk.bgRed(Chalk.white('ERROR'))} | ${Input}`); 
+    error(Input, Code = '00000000-0000-0000-0000-000000000000') {
+
+        Wait(1000)
+
+        const WebhookChannel = new Discord.WebhookClient(this.DisBot.config.Guild.Log.ID, this.DisBot.config.Guild.Log.Token);
+
+        WebhookChannel.send(`\`\`\`JS\n${ConsolePrefix} ERROR | ${Input}\`\`\`\n\`\`\`Error Code : ${Code}\`\`\``)
+        return console.log(`${ConsolePrefix} ${Chalk.bgRed(Chalk.white('ERROR'))} | ${Input}\n${ConsolePrefix} ${Chalk.bgRed(Chalk.white('ERROR'))} | Error Code: ${Code}`); 
+
     }
 
     log(Input) {
-        return console.debug(`${ConsolePrefix} ${Chalk.bgBlue(Chalk.black('LOG'))} | ${Input}`);
+
+        Wait(1000)
+
+        const WebhookChannel = new Discord.WebhookClient(this.DisBot.config.Guild.Log.ID, this.DisBot.config.Guild.Log.Token);
+
+        WebhookChannel.send(`\`\`\`JS\n${ConsolePrefix} LOG | ${Input}\`\`\``)
+        return console.log(`${ConsolePrefix} ${Chalk.bgBlue(Chalk.black('LOG'))} | ${Input}`);
+
     }
 
     warn(Input) { 
-        return console.debug(`${ConsolePrefix} ${Chalk.bgYellow(Chalk.black('WARN'))} | ${Input}`);
+
+        Wait(1000)
+
+        const WebhookChannel = new Discord.WebhookClient(this.DisBot.config.Guild.Log.ID, this.DisBot.config.Guild.Log.Token);
+
+        WebhookChannel.send(`\`\`\`JS\n${ConsolePrefix} WARN | ${Input}\`\`\``)
+        return console.log(`${ConsolePrefix} ${Chalk.bgYellow(Chalk.black('WARN'))} | ${Input}`);
+
     }
 
 }

@@ -28,7 +28,19 @@ class Interaction extends BaseEvent {
 
         if(InteractionCommand.Config.Enabled === false) return Interaction.editReply('Not enabled');
 
-        if(InteractionCommand) return InteractionCommand.execute(Interaction, Interaction.options, DisBot);
+        if(InteractionCommand) {
+
+            try {
+
+                InteractionCommand.execute(Interaction, Interaction.options, DisBot);
+
+            } catch (Error) {
+
+                DisBot.utils.handleInteractionError(Interaction, Interaction.options, DisBot, Error);
+
+            }
+
+        }
 
     }
 

@@ -1,14 +1,14 @@
 const BaseInteraction = require('../../Base/Interaction');
 const Discord = require('discord.js');
 
-class Pause extends BaseInteraction {
+class Stop extends BaseInteraction {
 
     constructor(DisBot) {
 
         super(DisBot, {
 
-            Name: 'pause',
-            Description: 'Pauses the current playing song.',
+            Name: 'stop',
+            Description: 'Stops the current song and left the voice channel.',
             Usage: '',
             Enabled: true,
             clientPermissions: ['SEND_MESSAGES'],
@@ -29,10 +29,10 @@ class Pause extends BaseInteraction {
 
     async execute(Interaction = new Discord.CommandInteraction(), InteractionOptions = new Discord.CommandInteraction().options, DisBot = require('../../DisBot')) {
 
-        DisBot.interactionPlayer.pause(Interaction, InteractionOptions, DisBot);
+        DisBot.interactionPlayer.stop(Interaction, InteractionOptions, DisBot);
 
     }
 
 }
 
-module.exports = Pause;
+module.exports = Stop;

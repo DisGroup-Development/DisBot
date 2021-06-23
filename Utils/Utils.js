@@ -1,4 +1,6 @@
+const Discord = require('discord.js');
 const Path = require('path');
+const UUID = require('uuid');
 
 class Utils {
 
@@ -11,6 +13,19 @@ class Utils {
     async fetchClientGuildSize(DisBot) {
 
         return DisBot.shard.fetchClientValues('guilds.cache.size');
+
+    }
+
+    handleInteractionError(Interaction, InteractionOptions, DisBot, Error) {
+
+        const ErrorCode = UUID.v4();
+
+        var ErrorEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} An error has appeared. Please try again. \nError Code : \`${ErrorCode}\``)
+
+        Interaction.followUp({ embeds: [ ErrorEmbed ], ephemeral: false });
+        return DisBot.logger.error(Error, ErrorCode);
 
     }
 
