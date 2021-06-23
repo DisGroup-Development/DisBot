@@ -159,7 +159,7 @@ class InteractionPlayer {
     
                 const VoiceConnection = DiscordVoice.getVoiceConnection(InteractionGuildID);
 
-                VoiceConnection.destroy();
+                if(VoiceConnection) VoiceConnection.destroy();
 
                 if(!ServerQueue.TextChannel?.deleted) ServerQueue.TextChannel.send({ embeds: [ LeftVoiceChannelEmbed ] })
 
@@ -523,6 +523,129 @@ class InteractionPlayer {
                 return Interaction.editReply({ embeds: [ CannotModifyVolumeEmbed ], ephemeral: true });
 
             }
+
+        }
+
+    }
+
+    async skip(Interaction = new Discord.CommandInteraction(), InteractionOptions = new Discord.CommandInteraction().options, DisBot = require('../DisBot')) {
+
+        const MemberVoiceChannel = Interaction.member.voice.channel;
+        const ServerQueue = await DisBot.serverQueues.get(Interaction.guildID)
+
+        var NoServerQueueEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} There is no song in the queue you can skip.`)
+
+        if(!ServerQueue) return Interaction.editReply({ embeds: [ NoServerQueueEmbed ], ephemeral: true });
+
+        var NoMemberVoiceChannelEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} You must be connected to a voice channel to use this command.`)
+
+        if(!MemberVoiceChannel) return Interaction.editReply({ embeds: [ NoMemberVoiceChannelEmbed ], ephemeral: true });
+
+        var AlreadyInVoiceChannelEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} I'm already i another voice channel. Join me to use this command.`)
+
+        if(ServerQueue && Interaction.guild.me.voice.channel.id !== MemberVoiceChannel.id) return Interaction.editReply({ embeds: [ AlreadyInVoiceChannelEmbed ], ephemeral: true });
+
+        const MemberVoiceChannelConnectedMemberCount = await MemberVoiceChannel.members.filter(Member => !Member.user.bot).size;
+
+        if(MemberVoiceChannelConnectedMemberCount > 1) {
+
+            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+
+                var SkippedEmbed = new Discord.MessageEmbed()
+                    .setColor(DisBot.config.Colors.DisBot)
+                    .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Song skipped.`)
+
+                await ServerQueue.playerSubscription.player.stop();
+                ServerQueue.isPlaying = false;
+                return Interaction.editReply({ embeds: [ SkippedEmbed ], ephemeral: false });
+
+            } else {
+
+                if(Interaction.user.id === ServerQueue.Songs[0].Requester.id) {
+                    
+                    var SkippedEmbed = new Discord.MessageEmbed()
+                    .setColor(DisBot.config.Colors.DisBot)
+                    .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Song skipped.`)
+
+                    await ServerQueue.playerSubscription.player.stop();
+                    ServerQueue.isPlaying = false;
+                    return Interaction.editReply({ embeds: [ SkippedEmbed ], ephemeral: false });
+
+                } else {
+
+                    const MemberVoiceChannelMustVotesCount = Math.floor(MemberVoiceChannelConnectedMemberCount/2+1);
+
+                    var InteractToSkipEmbed = new Discord.MessageEmbed()
+                        .setColor(DisBot.config.Colors.DisBot)
+                        .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Click the button to skip the song. (\`\`0 / ${MemberVoiceChannelMustVotesCount}\`\`)`)
+                        
+                    var SkipButton = new Discord.MessageActionRow()
+                        .addComponents(
+                            new Discord.MessageButton()
+                                .setCustomID('skipMusicButton')
+                                .setEmoji(DisBot.emojis.cache.get(DisBot.config.Emojis.Skip))
+                                .setLabel('Skip')
+                                .setStyle('PRIMARY')
+                        )
+        
+                    Interaction.editReply({ components: [ SkipButton ], embeds: [ InteractToSkipEmbed ], ephemeral: false });
+        
+                    const InteractionMessage = await Interaction.fetchReply();
+                    const MessageComponentInteractionCollectorFilter = CustomInteraction => CustomInteraction.customID === 'skipMusicButton';
+                    const MessageComponentInteractionCollector = InteractionMessage.createMessageComponentInteractionCollector(MessageComponentInteractionCollectorFilter, { time: 30000 });
+        
+                    var UserClickedButton = new Map();
+        
+                    MessageComponentInteractionCollector.on('collect', async CollectorInteraction => {
+        
+                        if(UserClickedButton.has(CollectorInteraction.user.id)) return;
+        
+                        UserClickedButton.set(CollectorInteraction.user.id, 'clickedButton');
+        
+                        var MemberVoiceChannelHaveVotedCount = MemberVoiceChannelMustVotesCount - MemberVoiceChannelMustVotesCount + 1;
+        
+                        if(MemberVoiceChannelHaveVotedCount >= MemberVoiceChannelMustVotesCount) {
+        
+                            InteractToSkipEmbed.setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Click the button to skip the song. (\`\`${MemberVoiceChannelHaveVotedCount} / ${MemberVoiceChannelMustVotesCount}\`\`)`)
+                            Interaction.editReply({ components: [], embeds: [ InteractToSkipEmbed ], ephemeral: false });
+        
+                            var SkippedEmbed = new Discord.MessageEmbed()
+                                .setColor(DisBot.config.Colors.DisBot)
+                                .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Music skipped.`)
+        
+                            await ServerQueue.playerSubscription.player.stop();
+                            ServerQueue.isPlaying = false;
+                            await Interaction.followUp({ embeds: [ SkippedEmbed ], ephemeral: false });
+                            return MessageComponentInteractionCollector.stop();
+        
+                        } else {
+        
+                            InteractToSkipEmbed.setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Click the button to skip the song. (\`\`${MemberVoiceChannelHaveVotedCount} / ${MemberVoiceChannelMustVotesCount}\`\`)`)
+                            Interaction.editReply({ embeds: [ InteractToSkipEmbed ], ephemeral: false });
+        
+                        }
+        
+                    });
+
+                }
+
+            }
+
+        } else {
+
+            var SkippedEmbed = new Discord.MessageEmbed()
+                .setColor(DisBot.config.Colors.DisBot)
+                .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Song skipped.`)
+
+            await ServerQueue.playerSubscription.player.stop();
+            ServerQueue.isPlaying = false;
+            return Interaction.editReply({ embeds: [ SkippedEmbed ], ephemeral: false });
 
         }
 
