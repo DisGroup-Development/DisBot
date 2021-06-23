@@ -19,6 +19,8 @@ class Message extends BaseEvent {
 
             DisBot.interactions.forEach(Interaction => {
 
+                if(!Interaction.Config.enabledSlashCommand) return;
+
                 ( Interaction.Config.enabledOptions ? DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.create({ name: Interaction.Help.Name, description: Interaction.Help.Description, options: Interaction.Config.Options }) : DisBot.guilds.cache.get(DisBot.config.Guild.ID).commands.create({ name: Interaction.Help.Name, description: Interaction.Help.Description }) )
 
             })

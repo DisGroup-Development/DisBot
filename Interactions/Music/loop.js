@@ -1,21 +1,21 @@
 const BaseInteraction = require('../../Base/Interaction');
 const Discord = require('discord.js');
 
-class Skip extends BaseInteraction {
+class Loop extends BaseInteraction {
 
     constructor(DisBot) {
 
         super(DisBot, {
 
-            Name: 'skip',
-            Description: 'Skips the current song',
+            Name: 'loop',
+            Description: 'Loops the current song.',
             Usage: '',
             Enabled: true,
             clientPermissions: ['SEND_MESSAGES'],
             memberPermissions: [],
             enabledSlashCommand: true,
-            enabledOptions: true,
-            Options: [{ name: 'number', description: 'The number of the song you want to skip to.', type: 'INTEGER', required: false }],
+            enabledOptions: false,
+            Options: null,
             Cooldown: 5000,
             Dirname: __dirname,
             adminGuildOnly: true,
@@ -29,10 +29,10 @@ class Skip extends BaseInteraction {
 
     async execute(Interaction = new Discord.CommandInteraction(), InteractionOptions = new Discord.CommandInteraction().options, DisBot = require('../../DisBot')) {
 
-        ( InteractionOptions.has('number') ? DisBot.interactionPlayer.skipTo(Interaction, InteractionOptions, DisBot, InteractionOptions.get('number').value) : DisBot.interactionPlayer.skip(Interaction, InteractionOptions, DisBot) )
+        DisBot.interactionPlayer.loop(Interaction, InteractionOptions, DisBot);
 
     }
 
 }
 
-module.exports = Skip;
+module.exports = Loop;

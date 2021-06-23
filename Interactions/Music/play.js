@@ -51,8 +51,8 @@ class Play extends BaseInteraction {
         const PlaylistPattern = /^.*(list=)([^#\&\?]*).*/gi;
         const VideoPattern = /^(https?:\/\/)?(www\.)?(m\.)?(youtube\.com|youtu\.?be)\/.+$/gi;
         const URL = InteractionOptions.get('input').value;
-        
-        if(PlaylistPattern.test(URL) && !VideoPattern.test(URL)) return DisBot.interactions.get('playlist').execute(Interaction, InteractionOptions, DisBot);
+
+        if(PlaylistPattern.test(URL)) return DisBot.interactions.get('playlist').execute(Interaction, InteractionOptions, DisBot);
 
         var BaseServerQueueData = { AudioResource: null, Connection: null, isLoop: false, isPlaying: false, Player: DiscordVoice.createAudioPlayer(), playerSubscription: null, Songs:[], TextChannel: Interaction.channel, VoiceChannel: MemberVoiceChannel, Volume: 100 };
         var SongInfo;

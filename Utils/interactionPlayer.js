@@ -75,11 +75,12 @@ class InteractionPlayer {
                     .setStyle('SECONDARY')
             )
 
-        Interaction.editReply({ components: [ QueueButtons ], embeds: [ QueueEmbeds[CurrentEmbedPage] ], ephemeral: false });
+        Interaction.editReply({ embeds: [ QueueEmbeds[CurrentEmbedPage] ], ephemeral: false });
+        return; //Interaction.editReply({ components: [ QueueButtons ], embeds: [ QueueEmbeds[CurrentEmbedPage] ], ephemeral: false }); // Currently we can only create an embed with 10 songs, because I don't find the error who does not create the following queue song pages... Update is coming soon...
 
         const InteractionMessage = await Interaction.fetchReply();
         const MessageComponentInteractionCollectorFilter = CustomInteraction => CustomInteraction.customID === 'backButton' || CustomInteraction.customID === 'stopButton' || CustomInteraction.customID === 'forwardButton';
-        const MessageComponentInteractionCollector = InteractionMessage.createMessageComponentInteractionCollector(MessageComponentInteractionCollectorFilter, { time: 10000 });
+        const MessageComponentInteractionCollector = InteractionMessage.createMessageComponentInteractionCollector(MessageComponentInteractionCollectorFilter, { time: 60000 });
 
         MessageComponentInteractionCollector.on('collect', async CollectorInteraction => {
 
@@ -92,7 +93,7 @@ class InteractionPlayer {
         
                     --CurrentEmbedPage;
 
-                    Interaction.editReply({ components: [ QueueButtons ], embeds: [ QueueEmbeds[CurrentEmbedPage + 1 ] ], ephemeral: false });
+                    Interaction.editReply({ components: [ QueueButtons ], embeds: [ QueueEmbeds[CurrentEmbedPage] ], ephemeral: false });
 
                 } else {
 
@@ -114,8 +115,8 @@ class InteractionPlayer {
                         if(CurrentEmbedPage < QueueEmbeds.length - 1) {
 
                             CurrentEmbedPage++;
-        
-                            Interaction.editReply({ components: [ QueueButtons ], embeds: [ QueueEmbeds[CurrentEmbedPage + 1 ] ], ephemeral: false });
+
+                            Interaction.editReply({ components: [ QueueButtons ], embeds: [ QueueEmbeds[CurrentEmbedPage] ], ephemeral: false });
         
                         } else {
 
@@ -137,6 +138,65 @@ class InteractionPlayer {
 
         });
 
+
+    }
+
+    async loop(Interaction = new Discord.CommandInteraction(), InteractionOptions = new Discord.CommandInteraction().options, DisBot = require('../DisBot')) {
+
+        const MemberVoiceChannel = Interaction.member.voice.channel;
+        const ServerQueue = await DisBot.serverQueues.get(Interaction.guildID)
+
+        var NoServerQueueEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} There is no song in the queue you can skip.`)
+
+        if(!ServerQueue) return Interaction.editReply({ embeds: [ NoServerQueueEmbed ], ephemeral: true });
+
+        var NoMemberVoiceChannelEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} You must be connected to a voice channel to use this command.`)
+
+        if(!MemberVoiceChannel) return Interaction.editReply({ embeds: [ NoMemberVoiceChannelEmbed ], ephemeral: true });
+
+        var AlreadyInVoiceChannelEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} I'm already i another voice channel. Join me to use this command.`)
+
+        if(ServerQueue && Interaction.guild.me.voice.channel.id !== MemberVoiceChannel.id) return Interaction.editReply({ embeds: [ AlreadyInVoiceChannelEmbed ], ephemeral: true });
+
+        const MemberVoiceChannelConnectedMemberCount = await MemberVoiceChannel.members.filter(Member => !Member.user.bot).size;
+
+        if(MemberVoiceChannelConnectedMemberCount > 1) {
+
+            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MOVE_MEMBERS)) {
+
+                var LoopingEmbed = new Discord.MessageEmbed()
+                    .setColor(DisBot.config.Colors.DisBot)
+                    .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Loop)} ${(ServerQueue.isLoop ? 'Disabled' : 'Enabled')} looping`);
+
+                (ServerQueue.isLoop ? ServerQueue.isLoop = false : ServerQueue.isLoop = true)
+                return Interaction.editReply({ embeds: [ LoopingEmbed ], ephemeral: false });
+
+            } else {
+
+                var CannotLoopEmbed = new Discord.MessageEmbed()
+                    .setColor(DisBot.config.Colors.Red)
+                    .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} You can only loop a song if you are a moderator.`)
+
+                return Interaction.editReply({ embeds: [ CannotLoopEmbed ], ephemeral: true });
+
+            }
+
+        } else {
+
+            var LoopingEmbed = new Discord.MessageEmbed()
+                .setColor(DisBot.config.Colors.DisBot)
+                .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Loop)} ${(ServerQueue.isLoop ? 'Disabled' : 'Enabled')} looping`);
+
+            (ServerQueue.isLoop ? ServerQueue.isLoop = false : ServerQueue.isLoop = true)
+            return Interaction.editReply({ embeds: [ LoopingEmbed ], ephemeral: false });
+
+        }
 
     }
 
@@ -175,7 +235,7 @@ class InteractionPlayer {
 
         }
 
-        var AudioResource = DiscordVoice.createAudioResource(YouTubeDownloader(ServerQueue.Songs[0].URL, { filter: 'audioonly', format: 'mp3',highWaterMark: 1 << 25, quality: 'highestaudio' }), { inlineVolume: true });
+        var AudioResource = DiscordVoice.createAudioResource(YouTubeDownloader(ServerQueue.Songs[0].URL, { filter: 'audioonly', highWaterMark: 1 << 15 }), { inlineVolume: true });
 
         ServerQueue.AudioResource = AudioResource;
         ServerQueue.Connection.on(DiscordVoice.VoiceConnectionStatus.Disconnected, () => { DisBot.serverQueues.delete(InteractionGuildID) });
@@ -202,7 +262,7 @@ class InteractionPlayer {
 
                 ServerQueue.Songs.push(LastPlayedSong);
 
-                this.play(Interaction, InteractionOptions, DisBot, ServerQueue.Songs[0]);
+                return this.play(Interaction, InteractionOptions, DisBot, ServerQueue.Songs[0]);
 
             } else {
 
@@ -211,7 +271,7 @@ class InteractionPlayer {
                 
                 ServerQueue.Songs.shift();
 
-                this.play(Interaction, InteractionOptions, DisBot, ServerQueue.Songs[0]);
+                return this.play(Interaction, InteractionOptions, DisBot, ServerQueue.Songs[0]);
 
             }
 
@@ -219,7 +279,7 @@ class InteractionPlayer {
 
         ServerQueue.Player.on('error', (Error) => {
 
-            ServerQueue.Connection.destroy();
+            ServerQueue.Connection?.destroy();
             DisBot.serverQueues.delete(Interaction.guildID);
             return DisBot.utils.handleInteractionError(Interaction, InteractionOptions, DisBot, Error);
 
@@ -260,7 +320,7 @@ class InteractionPlayer {
 
         if(MemberVoiceChannelConnectedMemberCount > 1) {
 
-            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MOVE_MEMBERS)) {
 
                 var PausedEmbed = new Discord.MessageEmbed()
                     .setColor(DisBot.config.Colors.DisBot)
@@ -375,7 +435,7 @@ class InteractionPlayer {
 
         if(MemberVoiceChannelConnectedMemberCount > 1) {
 
-            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MOVE_MEMBERS)) {
 
                 var ResumedEmbed = new Discord.MessageEmbed()
                     .setColor(DisBot.config.Colors.DisBot)
@@ -555,7 +615,7 @@ class InteractionPlayer {
 
         if(MemberVoiceChannelConnectedMemberCount > 1) {
 
-            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MOVE_MEMBERS)) {
 
                 var SkippedEmbed = new Discord.MessageEmbed()
                     .setColor(DisBot.config.Colors.DisBot)
@@ -651,6 +711,101 @@ class InteractionPlayer {
 
     }
 
+    async skipTo(Interaction = new Discord.CommandInteraction(), InteractionOptions = new Discord.CommandInteraction().options, DisBot = require('../DisBot'), SongNumber = Number) {
+
+        const MemberVoiceChannel = Interaction.member.voice.channel;
+        const ServerQueue = await DisBot.serverQueues.get(Interaction.guildID)
+
+        var NoServerQueueEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} There is no song in the queue you can skip.`)
+
+        if(!ServerQueue) return Interaction.editReply({ embeds: [ NoServerQueueEmbed ], ephemeral: true });
+
+        var NoMemberVoiceChannelEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} You must be connected to a voice channel to use this command.`)
+
+        if(!MemberVoiceChannel) return Interaction.editReply({ embeds: [ NoMemberVoiceChannelEmbed ], ephemeral: true });
+
+        var AlreadyInVoiceChannelEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} I'm already i another voice channel. Join me to use this command.`)
+
+        if(ServerQueue && Interaction.guild.me.voice.channel.id !== MemberVoiceChannel.id) return Interaction.editReply({ embeds: [ AlreadyInVoiceChannelEmbed ], ephemeral: true });
+
+        var NotAValidSongNumberEmbed = new Discord.MessageEmbed()
+            .setColor(DisBot.config.Colors.Red)
+            .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} The queue has only ${ServerQueue.Songs.length} songs. Please enter a valid number.`)
+
+        if(ServerQueue.Songs.length < SongNumber || SongNumber <= 1) return Interaction.editReply({ embeds: [ NotAValidSongNumberEmbed ], ephemeral: true });
+
+        const MemberVoiceChannelConnectedMemberCount = await MemberVoiceChannel.members.filter(Member => !Member.user.bot).size;
+
+        if(MemberVoiceChannelConnectedMemberCount > 1) {
+
+            if(Interaction.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_CHANNELS) || Interaction.member.permissions.has(Discord.Permissions.FLAGS.MOVE_MEMBERS)) {
+
+                var SkippedToEmbed = new Discord.MessageEmbed()
+                    .setColor(DisBot.config.Colors.DisBot)
+                    .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Skipped to ${SongNumber}.`)
+
+                if(ServerQueue.isLoop) {
+
+                    for (let SongQueueNumber = 0; SongQueueNumber < SongNumber - 2; SongQueueNumber++) {
+        
+                        ServerQueue.Songs.push(ServerQueue.Songs.shift());
+        
+                    }
+        
+                } else {
+        
+                    ServerQueue.Songs = ServerQueue.Songs.slice(SongNumber - 2)
+        
+                }
+
+                await ServerQueue.playerSubscription.player.stop();
+                ServerQueue.isPlaying = false;
+                return Interaction.editReply({ embeds: [ SkippedToEmbed ], ephemeral: false });
+
+            } else {
+
+                var CannotSkipToSongEmbed = new Discord.MessageEmbed()
+                    .setColor(DisBot.config.Colors.Red)
+                    .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} You can only skip to a song if you are a moderator.`)
+
+                return Interaction.editReply({ embeds: [ CannotSkipToSongEmbed ], ephemeral: true });
+
+            }
+
+        } else {
+
+            var SkippedToEmbed = new Discord.MessageEmbed()
+                .setColor(DisBot.config.Colors.DisBot)
+                .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Skip)} Skipped to ${SongNumber}.`)
+
+            if(ServerQueue.isLoop) {
+
+                for (let SongQueueNumber = 0; SongQueueNumber < SongNumber - 2; SongQueueNumber++) {
+
+                    ServerQueue.Songs.push(ServerQueue.Songs.shift());
+
+                }
+
+            } else {
+
+                ServerQueue.Songs = ServerQueue.Songs.slice(SongNumber - 2)
+
+            }
+
+            await ServerQueue.playerSubscription.player.stop();
+            ServerQueue.isPlaying = false;
+            return Interaction.editReply({ embeds: [ SkippedToEmbed ], ephemeral: false });
+
+        }
+
+    }
+
     async stop(Interaction = new Discord.CommandInteraction(), InteractionOptions = new Discord.CommandInteraction().options, DisBot = require('../DisBot')) {
 
         const MemberVoiceChannel = Interaction.member.voice.channel;
@@ -698,11 +853,11 @@ class InteractionPlayer {
             
         } else {
 
-            var CannotModifyVolumeEmbed = new Discord.MessageEmbed()
+            var CannotStopSongEmbed = new Discord.MessageEmbed()
                 .setColor(DisBot.config.Colors.Red)
                 .setDescription(`${DisBot.emojis.cache.get(DisBot.config.Emojis.Cross)} You can only stop the song if you are a moderator.`)
 
-            return Interaction.editReply({ embeds: [ CannotModifyVolumeEmbed ], ephemeral: true });
+            return Interaction.editReply({ embeds: [ CannotStopSongEmbed ], ephemeral: true });
 
         }
 
